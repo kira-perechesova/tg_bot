@@ -9,9 +9,9 @@ from app.database.requests import get_classes, get_class_teacher
 
 main = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text='Классные руководители')],
-        [KeyboardButton(text='Администрация')],
-        [KeyboardButton(text='Классы'), KeyboardButton(text='Ещё')]
+        [KeyboardButton(text='Классные руководители'), KeyboardButton(text='Кабинеты')],
+        [KeyboardButton(text='Расписание класса'), KeyboardButton(text='Расписание учителя')],
+        [KeyboardButton(text='Замены'), KeyboardButton(text='Время')]
     ],
     resize_keyboard=True,
     input_field_placeholder='Выберите пункт меню...'
