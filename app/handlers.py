@@ -209,18 +209,3 @@ async def handle_class_without_context(message: Message):
 #         f'Текущее время: {now.strftime("%H:%M")}\n'
 #         f'❌ Уроков нет'
 #     )
-
-
-# Хэндлер для отмены любой операции (опционально)
-@router.message(F.text == 'Отмена')
-async def cancel_operation(message: Message, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state is None:
-        await message.answer('Нет активных операций для отмены.')
-        return
-
-    await state.clear()
-    await message.answer(
-        'Операция отменена. Выберите действие из меню:',
-        reply_markup=kb.main
-    )
