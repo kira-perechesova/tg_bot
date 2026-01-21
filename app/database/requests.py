@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from app.database.models import async_session
-from app.database.models import User, Classes, Teacher, Kabinet, StudentSchedule, TeacherSchedule
+from app.database.models import User, Classes, Teacher, Kabinet, StudentSchedule, TeacherSchedule, LessonTime
 
 
 async def set_user(tg_id: int) -> None: # none?
@@ -59,3 +59,8 @@ async def get_teacher_schedule_by_name(teacher_name: str):
         )
 
         return schedule
+
+async def get_lesson_times():
+    async with async_session() as session:
+        result = await session.scalars(select(LessonTime))
+        return result.all()

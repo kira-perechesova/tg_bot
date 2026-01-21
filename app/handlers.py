@@ -2,6 +2,7 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram.types import FSInputFile
+from datetime import datetime
 
 import app.keyboards as kb
 import app.database.requests as rq
@@ -124,4 +125,29 @@ async def send_teacher_schedule(message: Message):
     await message.answer_document(
         document=file,
         caption=f'Расписание учителя:\n{teacher_name}'
+    )
+
+@router.message(F.text == 'Время')
+async def show_current_lesson_time(message: Message):
+    now = datetime.now().time()
+
+    times = await rq.get_lesson_times()
+
+    for item in times:
+        start_str, end_str = item.time.split('-')
+
+        start_time = datetime.strptime(start_str, '%H:%M').time()
+        end_time = datetime.strptime(end_str, '%H:%M').time()
+
+        if start_time <= now <= end_time:
+            await message.answer(
+                f'Текущее время: {now.strftime("%H:%M")}\n'
+                f'📘 Сейчас {item.lesson_break}\n'
+                f'Закончится в {end_str}'
+            )
+            return
+
+    await message.answer(
+        f'Текущее время: {now.strftime("%H:%M")}\n'
+        f'❌ Уроков нет'
     )
