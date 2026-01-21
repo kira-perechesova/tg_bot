@@ -37,6 +37,20 @@ class Kabinet(Base):
     class_num: Mapped[int] = mapped_column(Integer)
     description: Mapped[str] = mapped_column(String(100))
 
+class StudentSchedule(Base):
+    __tablename__ = 'student_schedules'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    class_n: Mapped[str] = mapped_column(String(5))
+    path_r: Mapped[str] = mapped_column(String(255))
+
+class TeacherSchedule(Base):
+    __tablename__ = 'teacher_schedules'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    teacher_id: Mapped[int] = mapped_column(ForeignKey('teachers.id'))
+    path_schedule: Mapped[str] = mapped_column(String(255))
+
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

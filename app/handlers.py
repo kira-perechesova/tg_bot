@@ -76,3 +76,54 @@ async def kabinet_search(message: Message):
         f'🧭 Как пройти: {kabinet.description}'
     )
 
+
+@router.message(F.text == 'Расписание класса')
+async def schedule_start(message: Message):
+    await message.answer(
+        'Введите номер класса (например: 10Б):'
+    )
+
+@router.message(F.text.regexp(r'^\d{1,2}[А-ЯA-Z]$'))
+async def send_student_schedule(message: Message):
+    class_n = message.text.upper()
+
+    schedule = await rq.get_student_schedule(class_n)
+
+    if not schedule:
+        await message.answer(
+            f'Расписание для класса {class_n} не найдено'
+        )
+        return
+
+    file = FSInputFile(schedule.path_r)
+
+    await message.answer_document(
+        document=file,
+        caption=f'Расписание для {class_n}'
+    )
+
+
+@router.message(F.text == 'Расписание учителя')
+async def teacher_schedule_start(message: Message):
+    await message.answer(
+        'Введите ФИО учителя полностью (например: Загибалова Римма Ямиловна):'
+    )
+
+@router.message(F.text)
+async def send_teacher_schedule(message: Message):
+    teacher_name = message.text.strip()
+
+    schedule = await rq.get_teacher_schedule_by_name(teacher_name)
+
+    if not schedule:
+        await message.answer(
+            f'Учитель "{teacher_name}" не найден или расписание отсутствует'
+        )
+        return
+
+    file = FSInputFile(schedule.path_schedule)
+
+    await message.answer_document(
+        document=file,
+        caption=f'Расписание учителя:\n{teacher_name}'
+    )
