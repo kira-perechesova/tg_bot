@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from app.database.models import async_session
-from app.database.models import User, Classes, Teacher, Kabinet, StudentSchedule, TeacherSchedule
+from app.database.models import User, Classes, Teacher, Kabinet, StudentSchedule, TeacherSchedule, LessonTime
 
 
 async def set_user(tg_id: int) -> None: # none?

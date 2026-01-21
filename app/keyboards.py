@@ -11,8 +11,8 @@ main = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text='Классные руководители'), KeyboardButton(text='Кабинеты')],
         [KeyboardButton(text='Расписание класса'), KeyboardButton(text='Расписание учителя')],
-        [KeyboardButton(text='Замены')]
-        # [KeyboardButton(text='Замены'), KeyboardButton(text='Время')]
+        # [KeyboardButton(text='Замены')]
+        [KeyboardButton(text='Замены'), KeyboardButton(text='Время')]
     ],
     resize_keyboard=True,
     input_field_placeholder='Выберите пункт меню...'

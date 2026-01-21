@@ -4,7 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram.types import FSInputFile
-# from datetime import datetime
+from datetime import datetime
 
 import app.keyboards as kb
 import app.database.requests as rq
@@ -185,27 +185,91 @@ async def handle_class_without_context(message: Message):
     )
 
 
-# @router.message(F.text == 'Время')
-# async def show_current_lesson_time(message: Message):
-#     now = datetime.now().time()
-#
-#     times = await rq.get_lesson_times()
-#
-#     for item in times:
-#         start_str, end_str = item.time.split('-')
-#
-#         start_time = datetime.strptime(start_str, '%H:%M').time()
-#         end_time = datetime.strptime(end_str, '%H:%M').time()
-#
-#         if start_time <= now <= end_time:
-#             await message.answer(
-#                 f'Текущее время: {now.strftime("%H:%M")}\n'
-#                 f'📘 Сейчас {item.lesson_break}\n'
-#                 f'Закончится в {end_str}'
-#             )
-#             return
-#
-#     await message.answer(
-#         f'Текущее время: {now.strftime("%H:%M")}\n'
-#         f'❌ Уроков нет'
-#     )
+@router.message(F.text == 'Время')
+async def show_current_lesson_time(message: Message):
+    now = datetime.now()
+    current_time = now.time()
+
+    times = await rq.get_lesson_times()
+
+    if not times:
+        await message.answer(
+            f'Текущее время: {now.strftime("%H:%M")}\n'
+            f'❌ Расписание уроков не найдено'
+        )
+        return
+
+    for item in times:
+        try:
+            start_str, end_str = item.time.split('-')
+
+            start_time = datetime.strptime(start_str, '%H:%M').time()
+            end_time = datetime.strptime(end_str, '%H:%M').time()
+
+            if start_time <= current_time <= end_time:
+                await message.answer(
+                    f'Текущее время: {now.strftime("%H:%M")}\n'
+                    f'📘 Сейчас {item.lesson_break}\n'
+                    f'Закончится в {end_str}'
+                )
+                return
+
+        except (ValueError, AttributeError) as e:
+            # Пропускаем некорректные записи
+            print(f"Ошибка обработки времени: {e} для записи {item}")
+            continue
+
+    # Проверяем, между какими уроками/переменами сейчас
+    for i in range(len(times) - 1):
+        try:
+            current_end_str = times[i].time.split('-')[1]
+            next_start_str = times[i + 1].time.split('-')[0]
+
+            end_time = datetime.strptime(current_end_str, '%H:%M').time()
+            next_start_time = datetime.strptime(next_start_str, '%H:%M').time()
+
+            if end_time < current_time < next_start_time:
+                await message.answer(
+                    f'Текущее время: {now.strftime("%H:%M")}\n'
+                    f'🕒 Сейчас перемена между уроками\n'
+                    f'Следующий урок начнется в {next_start_str}'
+                )
+                return
+
+        except (ValueError, IndexError, AttributeError):
+            continue
+
+    # Проверяем, до начала первого урока
+    try:
+        first_start_str = times[0].time.split('-')[0]
+        first_start_time = datetime.strptime(first_start_str, '%H:%M').time()
+
+        if current_time < first_start_time:
+            await message.answer(
+                f'Текущее время: {now.strftime("%H:%M")}\n'
+                f'⏰ Уроки еще не начались\n'
+                f'Первый урок начнется в {first_start_str}'
+            )
+            return
+    except (ValueError, IndexError, AttributeError):
+        pass
+
+    # Проверяем, после окончания последнего урока
+    try:
+        last_end_str = times[-1].time.split('-')[1]
+        last_end_time = datetime.strptime(last_end_str, '%H:%M').time()
+
+        if current_time > last_end_time:
+            await message.answer(
+                f'Текущее время: {now.strftime("%H:%M")}\n'
+                f'🎒 Уроки уже закончились\n'
+                f'Последний урок закончился в {last_end_str}'
+            )
+            return
+    except (ValueError, IndexError, AttributeError):
+        pass
+
+    await message.answer(
+        f'Текущее время: {now.strftime("%H:%M")}\n'
+        f'❌ Уроков нет'
+    )
