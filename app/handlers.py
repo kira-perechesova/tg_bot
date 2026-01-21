@@ -18,32 +18,30 @@ async def cmd_start(message: Message):
     )
 
 
+
 @router.message(F.text == 'Классные руководители')
-async def classes(message: Message):
+async def class_teacher_start(message: Message):
     await message.answer(
-        'Выберите класс',
-        reply_markup=await kb.classes()
+        'Введите номер класса (например: 10Б):'
     )
 
-
-@router.callback_query(F.data.startswith('class_'))
-async def show_class_teacher(callback: CallbackQuery):
-    class_nl = callback.data.split('_')[1]
-
-    await callback.answer()
+@router.message(F.text.regexp(r'^\d{1,2}[А-ЯA-Z]$'))
+async def show_class_teacher(message: Message):
+    class_nl = message.text.upper()
 
     teacher = await rq.get_class_teacher(class_nl)
 
     if not teacher:
-        await callback.message.answer(
-            f'Для класса {class_nl} классный руководитель не найден'
+        await message.answer(
+            f'❌ Класс {class_nl} не найден или классный руководитель не указан'
         )
         return
 
-    await callback.message.answer(
-        f'Классный руководитель {class_nl}:\n'
+    await message.answer(
+        f'👩‍🏫 Классный руководитель {class_nl}:\n'
         f'{teacher.name}'
     )
+
 
 @router.message(F.text == 'Замены')
 async def send_zameny(message: Message):
