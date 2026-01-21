@@ -19,17 +19,17 @@ main = ReplyKeyboardMarkup(
 )
 
 
-async def classes():
-    all_classes = await get_classes()
-    keyboard = InlineKeyboardBuilder()
-
-    for class_item in all_classes:
-        keyboard.add(
-            InlineKeyboardButton(
-                text=class_item.class_nl,
-                callback_data=f"class_{class_item.class_nl}"
-            )
-        )
-
-    return keyboard.adjust(2).as_markup()
+# async def classes():
+#     all_classes = await get_classes()
+#     keyboard = InlineKeyboardBuilder()
+#
+#     for class_item in all_classes:
+#         keyboard.add(
+#             InlineKeyboardButton(
+#                 text=class_item.class_nl,
+#                 callback_data=f"class_{class_item.class_nl}"
+#             )
+#         )
+#
+#     return keyboard.adjust(2).as_markup()
 

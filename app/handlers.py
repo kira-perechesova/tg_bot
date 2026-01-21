@@ -1,13 +1,23 @@
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
 from aiogram.types import FSInputFile
-from datetime import datetime
+# from datetime import datetime
 
 import app.keyboards as kb
 import app.database.requests as rq
 
 router = Router()
+
+
+# Определяем состояния для FSM
+class Form(StatesGroup):
+    waiting_for_class_teacher = State()  # Ждем класс для поиска классного руководителя
+    waiting_for_class_schedule = State()  # Ждем класс для расписания класса
+    waiting_for_kabinet = State()  # Ждем номер кабинета
+    waiting_for_teacher_schedule = State()  # Ждем ФИО учителя для расписания
 
 
 @router.message(CommandStart())
@@ -19,15 +29,16 @@ async def cmd_start(message: Message):
     )
 
 
-
 @router.message(F.text == 'Классные руководители')
-async def class_teacher_start(message: Message):
+async def class_teacher_start(message: Message, state: FSMContext):
+    await state.set_state(Form.waiting_for_class_teacher)
     await message.answer(
         'Введите номер класса (например: 10Б):'
     )
 
-@router.message(F.text.regexp(r'^\d{1,2}[А-ЯA-Z]$'))
-async def show_class_teacher(message: Message):
+
+@router.message(Form.waiting_for_class_teacher, F.text.regexp(r'^\d{1,2}[А-ЯA-Z]$'))
+async def show_class_teacher(message: Message, state: FSMContext):
     class_nl = message.text.upper()
 
     teacher = await rq.get_class_teacher(class_nl)
@@ -36,11 +47,20 @@ async def show_class_teacher(message: Message):
         await message.answer(
             f'❌ Класс {class_nl} не найден или классный руководитель не указан'
         )
+        await state.clear()
         return
 
     await message.answer(
         f'👩‍🏫 Классный руководитель {class_nl}:\n'
         f'{teacher.name}'
+    )
+    await state.clear()
+
+
+@router.message(Form.waiting_for_class_teacher)
+async def invalid_class_format_for_teacher(message: Message, state: FSMContext):
+    await message.answer(
+        'Неверный формат класса. Пожалуйста, введите номер класса в формате "10Б":'
     )
 
 
@@ -52,14 +72,17 @@ async def send_zameny(message: Message):
         caption='Актуальные замены'
     )
 
+
 @router.message(F.text == 'Кабинеты')
-async def kabinet_start(message: Message):
+async def kabinet_start(message: Message, state: FSMContext):
+    await state.set_state(Form.waiting_for_kabinet)
     await message.answer(
         'Введите номер кабинета (например: 51):'
     )
 
-@router.message(F.text.regexp(r'^\d+$'))
-async def kabinet_search(message: Message):
+
+@router.message(Form.waiting_for_kabinet, F.text.regexp(r'^\d+$'))
+async def kabinet_search(message: Message, state: FSMContext):
     kabinet_number = int(message.text)
 
     kabinet = await rq.get_kabinet_by_number(kabinet_number)
@@ -68,22 +91,33 @@ async def kabinet_search(message: Message):
         await message.answer(
             f'Кабинет №{kabinet_number} не найден в базе данных'
         )
+        await state.clear()
         return
 
     await message.answer(
         f'📍 Кабинет №{kabinet.class_num}\n'
         f'🧭 Как пройти: {kabinet.description}'
     )
+    await state.clear()
+
+
+@router.message(Form.waiting_for_kabinet)
+async def invalid_kabinet_format(message: Message, state: FSMContext):
+    await message.answer(
+        'Неверный формат номера кабинета. Пожалуйста, введите только цифры (например: 51):'
+    )
 
 
 @router.message(F.text == 'Расписание класса')
-async def schedule_start(message: Message):
+async def schedule_start(message: Message, state: FSMContext):
+    await state.set_state(Form.waiting_for_class_schedule)
     await message.answer(
         'Введите номер класса (например: 10Б):'
     )
 
-@router.message(F.text.regexp(r'^\d{1,2}[А-ЯA-Z]$'))
-async def send_student_schedule(message: Message):
+
+@router.message(Form.waiting_for_class_schedule, F.text.regexp(r'^\d{1,2}[А-ЯA-Z]$'))
+async def send_student_schedule(message: Message, state: FSMContext):
     class_n = message.text.upper()
 
     schedule = await rq.get_student_schedule(class_n)
@@ -92,6 +126,7 @@ async def send_student_schedule(message: Message):
         await message.answer(
             f'Расписание для класса {class_n} не найдено'
         )
+        await state.clear()
         return
 
     file = FSInputFile(schedule.path_r)
@@ -100,16 +135,26 @@ async def send_student_schedule(message: Message):
         document=file,
         caption=f'Расписание для {class_n}'
     )
+    await state.clear()
+
+
+@router.message(Form.waiting_for_class_schedule)
+async def invalid_class_format_for_schedule(message: Message, state: FSMContext):
+    await message.answer(
+        'Неверный формат класса. Пожалуйста, введите номер класса в формате "10Б":'
+    )
 
 
 @router.message(F.text == 'Расписание учителя')
-async def teacher_schedule_start(message: Message):
+async def teacher_schedule_start(message: Message, state: FSMContext):
+    await state.set_state(Form.waiting_for_teacher_schedule)
     await message.answer(
         'Введите ФИО учителя полностью (например: Загибалова Римма Ямиловна):'
     )
 
-@router.message(F.text)
-async def send_teacher_schedule(message: Message):
+
+@router.message(Form.waiting_for_teacher_schedule, F.text)
+async def send_teacher_schedule(message: Message, state: FSMContext):
     teacher_name = message.text.strip()
 
     schedule = await rq.get_teacher_schedule_by_name(teacher_name)
@@ -118,6 +163,7 @@ async def send_teacher_schedule(message: Message):
         await message.answer(
             f'Учитель "{teacher_name}" не найден или расписание отсутствует'
         )
+        await state.clear()
         return
 
     file = FSInputFile(schedule.path_schedule)
@@ -126,7 +172,19 @@ async def send_teacher_schedule(message: Message):
         document=file,
         caption=f'Расписание учителя:\n{teacher_name}'
     )
-#
+    await state.clear()
+
+
+@router.message(F.text.regexp(r'^\d{1,2}[А-ЯA-Z]$'))
+async def handle_class_without_context(message: Message):
+    # Обработка случая, когда пользователь ввел номер класса без выбора команды
+    await message.answer(
+        'Вы ввели номер класса. Пожалуйста, выберите, что вы хотите получить:\n\n'
+        '1. "Классные руководители" - для поиска классного руководителя\n'
+        '2. "Расписание класса" - для получения расписания класса'
+    )
+
+
 # @router.message(F.text == 'Время')
 # async def show_current_lesson_time(message: Message):
 #     now = datetime.now().time()
@@ -151,3 +209,18 @@ async def send_teacher_schedule(message: Message):
 #         f'Текущее время: {now.strftime("%H:%M")}\n'
 #         f'❌ Уроков нет'
 #     )
+
+
+# Хэндлер для отмены любой операции (опционально)
+@router.message(F.text == 'Отмена')
+async def cancel_operation(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        await message.answer('Нет активных операций для отмены.')
+        return
+
+    await state.clear()
+    await message.answer(
+        'Операция отменена. Выберите действие из меню:',
+        reply_markup=kb.main
+    )

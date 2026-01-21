@@ -51,12 +51,12 @@ class TeacherSchedule(Base):
     teacher_id: Mapped[int] = mapped_column(ForeignKey('teachers.id'))
     path_schedule: Mapped[str] = mapped_column(String(255))
 
-class LessonTime(Base):
-    __tablename__ = 'lesson_times'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    time: Mapped[str] = mapped_column(String(11))  # например: 09:00-09:45
-    lesson_break: Mapped[str] = mapped_column(String(10))
+# class LessonTime(Base):
+#     __tablename__ = 'lesson_times'
+#
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     time: Mapped[str] = mapped_column(String(11))  # например: 09:00-09:45
+#     lesson_break: Mapped[str] = mapped_column(String(10))
 
 async def async_main():
     async with engine.begin() as conn:
