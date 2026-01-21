@@ -126,28 +126,28 @@ async def send_teacher_schedule(message: Message):
         document=file,
         caption=f'Расписание учителя:\n{teacher_name}'
     )
-
-@router.message(F.text == 'Время')
-async def show_current_lesson_time(message: Message):
-    now = datetime.now().time()
-
-    times = await rq.get_lesson_times()
-
-    for item in times:
-        start_str, end_str = item.time.split('-')
-
-        start_time = datetime.strptime(start_str, '%H:%M').time()
-        end_time = datetime.strptime(end_str, '%H:%M').time()
-
-        if start_time <= now <= end_time:
-            await message.answer(
-                f'Текущее время: {now.strftime("%H:%M")}\n'
-                f'📘 Сейчас {item.lesson_break}\n'
-                f'Закончится в {end_str}'
-            )
-            return
-
-    await message.answer(
-        f'Текущее время: {now.strftime("%H:%M")}\n'
-        f'❌ Уроков нет'
-    )
+#
+# @router.message(F.text == 'Время')
+# async def show_current_lesson_time(message: Message):
+#     now = datetime.now().time()
+#
+#     times = await rq.get_lesson_times()
+#
+#     for item in times:
+#         start_str, end_str = item.time.split('-')
+#
+#         start_time = datetime.strptime(start_str, '%H:%M').time()
+#         end_time = datetime.strptime(end_str, '%H:%M').time()
+#
+#         if start_time <= now <= end_time:
+#             await message.answer(
+#                 f'Текущее время: {now.strftime("%H:%M")}\n'
+#                 f'📘 Сейчас {item.lesson_break}\n'
+#                 f'Закончится в {end_str}'
+#             )
+#             return
+#
+#     await message.answer(
+#         f'Текущее время: {now.strftime("%H:%M")}\n'
+#         f'❌ Уроков нет'
+#     )
