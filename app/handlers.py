@@ -1,6 +1,7 @@
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
+from aiogram.types import FSInputFile
 
 import app.keyboards as kb
 import app.database.requests as rq
@@ -42,4 +43,12 @@ async def show_class_teacher(callback: CallbackQuery):
     await callback.message.answer(
         f'Классный руководитель {class_nl}:\n'
         f'{teacher.name}'
+    )
+
+@router.message(F.text == 'Замены')
+async def send_zameny(message: Message):
+    file = FSInputFile('app/files/замены_на_26.01.2026.jpg')
+    await message.answer_document(
+        document=file,
+        caption='Актуальные замены'
     )
