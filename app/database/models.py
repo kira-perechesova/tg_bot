@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, ForeignKey
+from sqlalchemy import BigInteger, String, ForeignKey, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine, async_session
 
@@ -29,6 +29,13 @@ class Classes(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     class_nl: Mapped[str] = mapped_column(String(5))
     teacher: Mapped[int] = mapped_column(ForeignKey('teachers.id'))
+
+class Kabinet(Base):
+    __tablename__ = 'kabinets'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    class_num: Mapped[int] = mapped_column(Integer)
+    description: Mapped[str] = mapped_column(String(100))
 
 async def async_main():
     async with engine.begin() as conn:

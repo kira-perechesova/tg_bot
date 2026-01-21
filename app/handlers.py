@@ -47,8 +47,32 @@ async def show_class_teacher(callback: CallbackQuery):
 
 @router.message(F.text == 'Замены')
 async def send_zameny(message: Message):
-    file = FSInputFile('app/files/замены_на_26.01.2026.jpg')
+    file = FSInputFile('app/files/замены_на_21.01.2026.jpg')
     await message.answer_document(
         document=file,
         caption='Актуальные замены'
     )
+
+@router.message(F.text == 'Кабинеты')
+async def kabinet_start(message: Message):
+    await message.answer(
+        'Введите номер кабинета (например: 51):'
+    )
+
+@router.message(F.text.regexp(r'^\d+$'))
+async def kabinet_search(message: Message):
+    kabinet_number = int(message.text)
+
+    kabinet = await rq.get_kabinet_by_number(kabinet_number)
+
+    if not kabinet:
+        await message.answer(
+            f'Кабинет №{kabinet_number} не найден в базе данных'
+        )
+        return
+
+    await message.answer(
+        f'📍 Кабинет №{kabinet.class_num}\n'
+        f'🧭 Как пройти: {kabinet.description}'
+    )
+
