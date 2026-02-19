@@ -66,7 +66,7 @@ async def invalid_class_format_for_teacher(message: Message, state: FSMContext):
 
 @router.message(F.text == 'Замены')
 async def send_zameny(message: Message):
-    file = FSInputFile('app/files/замены_на_21.01.2026.jpg')
+    file = FSInputFile('app/files/замены.jpg')
     await message.answer_document(
         document=file,
         caption='Актуальные замены'
