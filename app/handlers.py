@@ -24,7 +24,7 @@ class Form(StatesGroup):
 async def cmd_start(message: Message):
     await rq.set_user(message.from_user.id)
     await message.answer(
-        'Здравствуйте!\nЯ бот, созданный президентом гимназии №24 в 2026 году.',
+        'Здравствуйте!\nЯ бот, созданный президентом гимназии №24 Перечесовой Кирой в 2026 году.',
         reply_markup=kb.main
     )
 
@@ -185,7 +185,7 @@ async def handle_class_without_context(message: Message):
     )
 
 
-@router.message(F.text == 'Время')
+@router.message(F.text == 'Время урока/перемены')
 async def show_current_lesson_time(message: Message):
     now = datetime.now()
     current_time = now.time()
